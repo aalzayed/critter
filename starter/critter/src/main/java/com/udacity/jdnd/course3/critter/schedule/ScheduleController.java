@@ -1,8 +1,13 @@
 package com.udacity.jdnd.course3.critter.schedule;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.udacity.jdnd.course3.critter.exception.NotFoundException;
+import com.udacity.jdnd.course3.critter.schedule.entity.Schedule;
+import com.udacity.jdnd.course3.critter.utils.Mapper;
 
 /**
  * Handles web requests related to Schedules.
@@ -11,28 +16,46 @@ import java.util.List;
 @RequestMapping("/schedule")
 public class ScheduleController {
 
-    @PostMapping
-    public ScheduleDTO createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
-        throw new UnsupportedOperationException();
-    }
+	@Autowired
+	private ScheduleService scheduleService;
 
-    @GetMapping
-    public List<ScheduleDTO> getAllSchedules() {
-        throw new UnsupportedOperationException();
-    }
+	@PostMapping
+	public ScheduleDTO createSchedule(@RequestBody ScheduleDTO scheduleDTO) {
 
-    @GetMapping("/pet/{petId}")
-    public List<ScheduleDTO> getScheduleForPet(@PathVariable long petId) {
-        throw new UnsupportedOperationException();
-    }
+		if (scheduleDTO.getEmployeeIds() == null && scheduleDTO.getPetIds() == null) {
+			throw new NotFoundException();
+		}
 
-    @GetMapping("/employee/{employeeId}")
-    public List<ScheduleDTO> getScheduleForEmployee(@PathVariable long employeeId) {
-        throw new UnsupportedOperationException();
-    }
+		Schedule scheduleLists = scheduleService.getScheduleLists(scheduleDTO.getEmployeeIds(),
+				scheduleDTO.getPetIds());
+		Schedule schedule = Mapper.convertScheduleDTOToSchedule(scheduleDTO, scheduleLists.getEmployees(),
+				scheduleLists.getPets());
 
-    @GetMapping("/customer/{customerId}")
-    public List<ScheduleDTO> getScheduleForCustomer(@PathVariable long customerId) {
-        throw new UnsupportedOperationException();
-    }
+		if (schedule.getEmployees().size() != scheduleDTO.getEmployeeIds().size()
+				|| schedule.getPets().size() != scheduleDTO.getPetIds().size()) {
+			throw new NotFoundException();
+		}
+
+		return Mapper.convertScheduleToScheduleDTO(scheduleService.createSchedule(schedule));
+	}
+
+	@GetMapping
+	public List<ScheduleDTO> getAllSchedules() {
+		return Mapper.convertScheduleToScheduleDTO(scheduleService.getAllSchedules());
+	}
+
+	@GetMapping("/pet/{petId}")
+	public List<ScheduleDTO> getScheduleForPet(@PathVariable Long petId) {
+		return Mapper.convertScheduleToScheduleDTO(scheduleService.getScheduleForPet(petId));
+	}
+
+	@GetMapping("/employee/{employeeId}")
+	public List<ScheduleDTO> getScheduleForEmployee(@PathVariable Long employeeId) {
+		return Mapper.convertScheduleToScheduleDTO(scheduleService.getScheduleForEmployee(employeeId));
+	}
+
+	@GetMapping("/customer/{customerId}")
+	public List<ScheduleDTO> getScheduleForCustomer(@PathVariable Long customerId) {
+		return Mapper.convertScheduleToScheduleDTO(scheduleService.getScheduleForCustomer(customerId));
+	}
 }

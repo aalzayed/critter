@@ -1,8 +1,13 @@
 package com.udacity.jdnd.course3.critter.pet;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.udacity.jdnd.course3.critter.exception.NotFoundException;
+import com.udacity.jdnd.course3.critter.pet.entity.Pet;
+import com.udacity.jdnd.course3.critter.utils.Mapper;
 
 /**
  * Handles web requests related to Pets.
@@ -11,23 +16,32 @@ import java.util.List;
 @RequestMapping("/pet")
 public class PetController {
 
-    @PostMapping
-    public PetDTO savePet(@RequestBody PetDTO petDTO) {
-        throw new UnsupportedOperationException();
-    }
+	@Autowired
+	private PetService petService;
 
-    @GetMapping("/{petId}")
-    public PetDTO getPet(@PathVariable long petId) {
-        throw new UnsupportedOperationException();
-    }
+	@PostMapping
+	public PetDTO savePet(@RequestBody PetDTO petDTO) {
 
-    @GetMapping
-    public List<PetDTO> getPets(){
-        throw new UnsupportedOperationException();
-    }
+		if (petDTO.getOwnerId() == null) { // Pets customer_id not nullable, thus null not accepted
+			throw new NotFoundException();
+		}
 
-    @GetMapping("/owner/{ownerId}")
-    public List<PetDTO> getPetsByOwner(@PathVariable long ownerId) {
-        throw new UnsupportedOperationException();
-    }
+		Pet pet = Mapper.convertPetDTOToPet(petDTO);
+		return Mapper.convertPetToPetDTO(petService.savePet(pet, petDTO.getOwnerId()));
+	}
+
+	@GetMapping("/{petId}")
+	public PetDTO getPet(@PathVariable Long petId) {
+		return Mapper.convertPetToPetDTO(petService.getPet(petId));
+	}
+
+	@GetMapping
+	public List<PetDTO> getPets() {
+		return Mapper.convertPetToPetDTO(petService.getPets());
+	}
+
+	@GetMapping("/owner/{ownerId}")
+	public List<PetDTO> getPetsByOwner(@PathVariable Long ownerId) {
+		return Mapper.convertPetToPetDTO(petService.getPetsByOwner(ownerId));
+	}
 }
